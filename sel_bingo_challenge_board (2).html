@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ SEL-BINGO CHALLENGE BOARD: My Social Emotional Quest</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- jsPDF & AutoTable for PDF exports -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        display: ['Fredoka', 'sans-serif'],
+                    },
+                    colors: {
+                        canvaYellow: '#FFD166',
+                        canvaPink: '#FF70A6',
+                        canvaPurple: '#70D6FF',
+                        canvaViolet: '#9B5DE5',
+                        canvaGreen: '#06D6A0',
+                        scienceDark: '#1E1B4B',
+                    },
+                    boxShadow: {
+                        'canva': '0px 10px 25px -5px rgba(112, 93, 229, 0.25)',
+                        'card-pop': '0px 8px 0px 0px #1E1B4B',
+                        'card-pop-sm': '0px 4px 0px 0px #1E1B4B',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: linear-gradient(135deg, #F0F4FF 0%, #E8E5FF 50%, #FFEBF2 100%);
+            min-height: 100vh;
+        }
+
+        .font-display {
+            font-family: 'Fredoka', cursive, sans-serif;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #9B5DE5;
+            border-radius: 10px;
+        }
+
+        .bingo-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        @media (max-width: 640px) {
+            .bingo-grid {
+                gap: 6px;
+            }
+        }
+
+        /* Animation class */
+        .pop-on-hover {
+            transition: all 0.2s ease;
+        }
+        .pop-on-hover:hover {
+            transform: translateY(-3px);
+        }
+        
+        .pulse-subtle {
+            animation: pulseSubtle 2s infinite;
+        }
+
+        @keyframes pulseSubtle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+        }
+    </style>
+</head>
+<body class="text-slate-800 pb-12 antialiased">
+
+    <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b-2 border-indigo-100 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="navigateTo('page-identitas')">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white text-xl shadow-md">
+                    <i class="fa-solid font-bold fa-atom animate-spin-slow"></i>
+                </div>
+                <div>
+                    <h1 class="font-display text-lg sm:text-xl font-bold text-indigo-900 leading-none">
+                        ⚡ SEL-BINGO <span class="text-purple-600">IPA IX</span>
+                    </h1>
+                    <p class="text-[11px] text-slate-500 font-medium">My Social Emotional Quest</p>
+                </div>
+            </div>
+
+            <!-- Header Right Menu -->
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <div id="student-badge-header" class="hidden sm:flex items-center space-x-2 bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-200 text-xs font-semibold text-indigo-800">
+                    <i class="fa-solid fa-user-astronaut text-indigo-600"></i>
+                    <span id="header-student-name">Siswa</span>
+                    <span class="bg-indigo-200 px-2 py-0.5 rounded-full text-[10px]" id="header-student-class">IX</span>
+                </div>
+
+                <button onclick="openGuruModal()" class="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-xl font-bold text-xs flex items-center space-x-1.5 border border-amber-300 transition-all shadow-sm">
+                    <i class="fa-solid fa-chalkboard-user"></i>
+                    <span>Portal Guru</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-5xl mx-auto px-3 sm:px-6 pt-6">
+
+        <!-- HALAMAN 1: IDENTITAS SISWA -->
+        <section id="page-identitas" class="block animate-fade-in">
+            <div class="glass-card rounded-3xl p-6 sm:p-10 shadow-canva border-2 border-white relative overflow-hidden">
+                <!-- Background Science Elements -->
+                <div class="absolute -right-8 -top-8 text-indigo-100 text-9xl opacity-40 pointer-events-none">
+                    <i class="fa-solid fa-flask-vial"></i>
+                </div>
+                <div class="absolute -left-10 -bottom-10 text-pink-100 text-9xl opacity-40 pointer-events-none">
+                    <i class="fa-solid fa-dna"></i>
+                </div>
+
+                <div class="relative z-10 max-w-2xl mx-auto text-center">
+                    <!-- Title Badge -->
+                    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-100 border border-purple-300 text-purple-800 text-xs font-bold mb-4 shadow-sm">
+                        <i class="fa-solid fa-rocket text-purple-600"></i>
+                        <span>Media Pembelajaran Sosial Emosional kelas IX SMP</span>
+                    </div>
+
+                    <h2 class="font-display text-3xl sm:text-5xl font-extrabold text-indigo-950 mb-3 leading-tight">
+                        ⚡ SEL-BINGO CHALLENGE BOARD
+                    </h2>
+                    <p class="font-display text-xl sm:text-2xl text-purple-600 mb-6 font-semibold">
+                        "My Social Emotional Quest" 🔬🧬
+                    </p>
+
+                    <div class="bg-white/80 rounded-2xl p-4 sm:p-5 text-left mb-8 border border-indigo-100 shadow-sm text-sm text-slate-700 space-y-2">
+                        <p class="font-bold text-indigo-900 flex items-center gap-2">
+                            <i class="fa-solid fa-circle-info text-indigo-500"></i> Petunjuk Petualangan:
+                        </p>
+                        <ul class="list-disc list-inside space-y-1 text-slate-600 pl-1">
+                            <li>Isi data diri kamu terlebih dahulu di bawah ini.</li>
+                            <li>Selesaikan 25 tantangan sikap sosial emosional selama kegiatan pembelajaran IPA.</li>
+                            <li>Tandai misi pada papan Bingo yang benar-benar telah kamu laksanakan secara jujur!</li>
+                            <li>Bentuk 5 kotak berurutan (horizontal, vertikal, atau diagonal) untuk dapatkan **BINGO**! 🎉</li>
+                        </ul>
+                    </div>
+
+                    <!-- Identity Form -->
+                    <form id="form-identitas" onsubmit="handleStartQuest(event)" class="bg-indigo-900 text-white p-6 sm:p-8 rounded-3xl shadow-card-pop border-2 border-indigo-950 text-left space-y-5">
+                        <h3 class="font-display text-xl font-bold text-canvaYellow flex items-center gap-2">
+                            <i class="fa-solid fa-id-card"></i> Identitas Petualang IPA
+                        </h3>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-indigo-200 mb-1">Nama Panggilan Siswa *</label>
+                            <input type="text" id="input-nama" required placeholder="Contoh: Budi / Siti" 
+                                class="w-full px-4 py-3 rounded-xl bg-white text-slate-900 font-semibold focus:outline-none focus:ring-4 focus:ring-purple-400 text-sm">
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-indigo-200 mb-1">Kelas *</label>
+                                <input type="text" id="input-kelas" required placeholder="Contoh: IX A / 8B / VII C" 
+                                    class="w-full px-4 py-3 rounded-xl bg-white text-slate-900 font-semibold focus:outline-none focus:ring-4 focus:ring-purple-400 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-indigo-200 mb-1">Nama Kelompok IPA (Opsional)</label>
+                                <input type="text" id="input-kelompok" placeholder="Contoh: Kelompok Einstein / Tim DNA" 
+                                    class="w-full px-4 py-3 rounded-xl bg-white text-slate-900 font-semibold focus:outline-none focus:ring-4 focus:ring-purple-400 text-sm">
+                            </div>
+                        </div>
+
+                        <div class="pt-3">
+                            <button type="submit" class="w-full py-4 bg-canvaYellow hover:bg-yellow-300 text-indigo-950 font-display font-extrabold text-lg rounded-2xl shadow-card-pop-sm border-2 border-indigo-950 transform active:translate-y-1 transition-all flex items-center justify-center gap-3">
+                                <span>MULAI MISI PETUALANGAN</span>
+                                <i class="fa-solid fa-circle-arrow-right text-xl"></i>
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- HALAMAN 2: PAPAN SEL BINGO INTERAKTIF -->
+        <section id="page-bingo" class="hidden animate-fade-in">
+            <!-- Student Header & Status -->
+            <div class="glass-card rounded-2xl p-4 mb-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 border border-white">
+                <div class="flex items-center space-x-3 w-full sm:w-auto">
+                    <div class="w-12 h-12 rounded-2xl bg-purple-600 text-white font-display text-xl font-bold flex items-center justify-center shadow-md">
+                        <span id="bingo-student-avatar">S</span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-base sm:text-lg flex items-center gap-2">
+                            <span id="bingo-student-name">Nama Siswa</span>
+                            <span id="bingo-student-tag" class="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full font-semibold">Kelas IX A</span>
+                        </h3>
+                        <p class="text-xs text-slate-500 font-medium" id="bingo-group-tag">Kelompok: -</p>
+                    </div>
+                </div>
+
+                <!-- Bingo Counter Pill & Progress -->
+                <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-200">
+                    <div class="text-right">
+                        <span class="text-xs text-slate-500 font-bold block uppercase tracking-wider">Misi Selesai</span>
+                        <span id="mission-counter" class="font-display font-extrabold text-lg text-indigo-900">0 dari 25</span>
+                    </div>
+                    
+                    <div class="bg-purple-900 text-white px-4 py-2 rounded-2xl flex items-center gap-2 shadow-card-pop-sm border border-indigo-950">
+                        <i class="fa-solid fa-trophy text-canvaYellow text-lg animate-bounce"></i>
+                        <div>
+                            <div class="text-[10px] text-purple-200 uppercase font-bold leading-none">Status Bingo</div>
+                            <div id="bingo-count-text" class="font-display font-bold text-sm text-canvaYellow">0 BINGO!</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Competency Legend Cards -->
+            <div class="mb-4 bg-white/70 p-3 rounded-2xl border border-indigo-100 shadow-sm flex flex-wrap gap-2 text-xs font-semibold justify-center">
+                <span class="px-2.5 py-1 rounded-lg bg-pink-100 text-pink-800 border border-pink-200"><i class="fa-solid fa-brain mr-1"></i> Kesadaran Diri</span>
+                <span class="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 border border-amber-200"><i class="fa-solid fa-sliders mr-1"></i> Manajemen Diri</span>
+                <span class="px-2.5 py-1 rounded-lg bg-blue-100 text-blue-800 border border-blue-200"><i class="fa-solid fa-users mr-1"></i> Kesadaran Sosial</span>
+                <span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-200"><i class="fa-solid fa-handshake mr-1"></i> Keterampilan Berelasi</span>
+                <span class="px-2.5 py-1 rounded-lg bg-purple-100 text-purple-800 border border-purple-200"><i class="fa-solid fa-scale-balanced mr-1"></i> Keputusan Bertanggung Jawab</span>
+            </div>
+
+            <!-- Bingo Grid Container -->
+            <div id="bingo-grid-container" class="bingo-grid mb-6">
+                <!-- 25 Tiles generated via JS -->
+            </div>
+
+            <!-- Page 2 Navigation Action -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-indigo-100 shadow-sm">
+                <div class="text-xs text-slate-500 font-medium text-center sm:text-left">
+                    <i class="fa-solid fa-lightbulb text-amber-500 mr-1"></i>
+                    Tandai semua tantangan yang berhasil kamu tunjukkan hari ini, lalu klik tombol refleksi!
+                </div>
+                <button onclick="navigateTo('page-refleksi')" class="w-full sm:w-auto px-6 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-display font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-sm">
+                    <span>SELESAI DAN REFLEKSI</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- HALAMAN 3: REFLEKSI DIRI -->
+        <section id="page-refleksi" class="hidden animate-fade-in">
+            <div class="glass-card rounded-3xl p-6 sm:p-8 shadow-canva border-2 border-white mb-8">
+                <!-- Header Title -->
+                <div class="text-center max-w-xl mx-auto mb-8">
+                    <div class="inline-block p-3 bg-purple-100 text-purple-700 rounded-2xl mb-3 text-2xl">
+                        <i class="fa-solid fa-pen-ruler"></i>
+                    </div>
+                    <h2 class="font-display text-2xl sm:text-3xl font-extrabold text-indigo-950">
+                        Refleksi Diri Pembelajaran IPA
+                    </h2>
+                    <p class="text-xs sm:text-sm text-slate-600 mt-1">
+                        Luapkan pemikiran dan pengalaman sosial emosional yang kamu alami dalam kelompok hari ini.
+                    </p>
+                </div>
+
+                <form id="form-refleksi" onsubmit="handleSaveReflection(event)" class="space-y-6">
+                    
+                    <!-- Q1: Perasaan -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <label class="block font-bold text-slate-800 text-sm mb-3">
+                            1. Bagaimana perasaan kamu selama mengikuti pembelajaran IPA hari ini? *
+                        </label>
+                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2" id="emotion-selector">
+                            <button type="button" onclick="selectReflectionEmotion('😊 Senang')" class="emotion-btn p-3 rounded-xl border-2 border-slate-200 hover:border-purple-500 text-center transition-all bg-slate-50 flex flex-col items-center gap-1">
+                                <span class="text-2xl">😊</span>
+                                <span class="text-xs font-bold text-slate-700">Senang</span>
+                            </button>
+                            <button type="button" onclick="selectReflectionEmotion('😌 Tenang')" class="emotion-btn p-3 rounded-xl border-2 border-slate-200 hover:border-purple-500 text-center transition-all bg-slate-50 flex flex-col items-center gap-1">
+                                <span class="text-2xl">😌</span>
+                                <span class="text-xs font-bold text-slate-700">Tenang</span>
+                            </button>
+                            <button type="button" onclick="selectReflectionEmotion('🤔 Bingung')" class="emotion-btn p-3 rounded-xl border-2 border-slate-200 hover:border-purple-500 text-center transition-all bg-slate-50 flex flex-col items-center gap-1">
+                                <span class="text-2xl">🤔</span>
+                                <span class="text-xs font-bold text-slate-700">Bingung</span>
+                            </button>
+                            <button type="button" onclick="selectReflectionEmotion('😟 Gugup')" class="emotion-btn p-3 rounded-xl border-2 border-slate-200 hover:border-purple-500 text-center transition-all bg-slate-50 flex flex-col items-center gap-1">
+                                <span class="text-2xl">😟</span>
+                                <span class="text-xs font-bold text-slate-700">Gugup</span>
+                            </button>
+                            <button type="button" onclick="selectReflectionEmotion('😐 Biasa saja')" class="emotion-btn p-3 rounded-xl border-2 border-slate-200 hover:border-purple-500 text-center transition-all bg-slate-50 flex flex-col items-center gap-1 col-span-2 sm:col-span-1">
+                                <span class="text-2xl">😐</span>
+                                <span class="text-xs font-bold text-slate-700">Biasa Saja</span>
+                            </button>
+                        </div>
+                        <input type="hidden" id="input-refleksi-1" required>
+                    </div>
+
+                    <!-- Q2: Perilaku Positif -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <label class="block font-bold text-slate-800 text-sm mb-2" for="input-refleksi-2">
+                            2. Perilaku positif apa yang sudah kamu tunjukkan hari ini? *
+                        </label>
+                        <textarea id="input-refleksi-2" required rows="2" placeholder="Contoh: Mendengarkan teman saat presentasi, tetap sabar saat mencoba soal rumit..." 
+                            class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                    </div>
+
+                    <!-- Q3: Tantangan -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <label class="block font-bold text-slate-800 text-sm mb-2" for="input-refleksi-3">
+                            3. Apa tantangan yang kamu alami saat bekerja sama dengan kelompok? *
+                        </label>
+                        <textarea id="input-refleksi-3" required rows="2" placeholder="Contoh: Perbedaan pendapat rumus, ada anggota yang kurang fokus..." 
+                            class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                    </div>
+
+                    <!-- Q4: Cara Membantu Teman -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <label class="block font-bold text-slate-800 text-sm mb-2" for="input-refleksi-4">
+                            4. Bagaimana cara kamu membantu teman selama kegiatan pembelajaran berlangsung? *
+                        </label>
+                        <textarea id="input-refleksi-4" required rows="2" placeholder="Contoh: Menjelaskan bagian materi IPA yang saya pahami, membagikan alat tulis..." 
+                            class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                    </div>
+
+                    <!-- Q5: Rencana Perbaikan -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <label class="block font-bold text-slate-800 text-sm mb-2" for="input-refleksi-5">
+                            5. Apa yang ingin kamu perbaiki pada pembelajaran berikutnya? *
+                        </label>
+                        <textarea id="input-refleksi-5" required rows="2" placeholder="Contoh: Lebih berani menyampaikan ide, lebih aktif mengapresiasi teman..." 
+                            class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4">
+                        <button type="button" onclick="navigateTo('page-bingo')" class="w-full sm:w-auto px-5 py-3 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-xl text-sm transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-arrow-left"></i>
+                            <span>KEMBALI KE BINGO</span>
+                        </button>
+
+                        <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                            <button type="button" onclick="downloadIndividualPDF()" class="w-full sm:w-auto px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition-all shadow-sm flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-file-pdf"></i>
+                                <span>UNDUH HASIL REFLEKSI (PDF)</span>
+                            </button>
+
+                            <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-display font-bold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-paper-plane"></i>
+                                <span>SIMPAN & KIRIM REFLEKSI</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- HALAMAN 4: PENUTUP -->
+        <section id="page-penutup" class="hidden animate-fade-in">
+            <div class="glass-card rounded-3xl p-8 sm:p-12 shadow-canva border-2 border-white text-center max-w-2xl mx-auto relative overflow-hidden">
+                <div class="w-24 h-24 bg-amber-100 text-amber-600 rounded-3xl mx-auto flex items-center justify-center text-5xl mb-6 shadow-inner border-2 border-amber-300">
+                    <i class="fa-solid fa-trophy animate-pulse"></i>
+                </div>
+
+                <h2 class="font-display text-3xl sm:text-4xl font-extrabold text-indigo-950 mb-4">
+                    Hebat! Misi Pembelajaran Selesai! 🎉
+                </h2>
+
+                <blockquote class="bg-indigo-900 text-white p-6 rounded-2xl shadow-card-pop border-2 border-indigo-950 mb-8 text-base sm:text-lg font-medium leading-relaxed italic">
+                    "Setiap langkah kecil adalah perkembangan. Kamu tidak harus menjadi yang paling hebat. Terus belajar, saling menghargai, dan bertumbuh bersama!"
+                </blockquote>
+
+                <div id="summary-recap-box" class="bg-purple-50 p-4 rounded-2xl border border-purple-200 text-left mb-8 text-xs sm:text-sm text-slate-700 space-y-1.5">
+                    <!-- Recap JS injected -->
+                </div>
+
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <button onclick="navigateTo('page-bingo')" class="w-full sm:w-auto px-6 py-3.5 bg-purple-600 hover:bg-purple-700 text-white font-display font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-table-cells"></i>
+                        <span>LIHAT KEMBALI PAPAN BINGO</span>
+                    </button>
+                    
+                    <button onclick="downloadIndividualPDF()" class="w-full sm:w-auto px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-display font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-download"></i>
+                        <span>UNDUH ULANG PDF</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL PEMILIH PERASAAN UNTUK MISI 1 -->
+    <div id="emotion-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border-2 border-purple-200 text-center animate-pop">
+            <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3">
+                <i class="fa-solid fa-face-smile"></i>
+            </div>
+            <h3 class="font-display font-bold text-lg text-indigo-950 mb-1">Pilih Perasaan Kamu</h3>
+            <p class="text-xs text-slate-500 mb-4">Bagaimana perasaan awal kamu sebelum mulai belajar IPA hari ini?</p>
+
+            <div class="grid grid-cols-3 gap-2 mb-6">
+                <button onclick="confirmMission1Emotion('😊 Senang')" class="p-3 bg-slate-50 hover:bg-purple-100 rounded-2xl border border-slate-200 flex flex-col items-center gap-1 transition-all">
+                    <span class="text-3xl">😊</span>
+                    <span class="text-[11px] font-bold text-slate-700">Senang</span>
+                </button>
+                <button onclick="confirmMission1Emotion('😃 Semangat')" class="p-3 bg-slate-50 hover:bg-purple-100 rounded-2xl border border-slate-200 flex flex-col items-center gap-1 transition-all">
+                    <span class="text-3xl">😃</span>
+                    <span class="text-[11px] font-bold text-slate-700">Semangat</span>
+                </button>
+                <button onclick="confirmMission1Emotion('😌 Tenang')" class="p-3 bg-slate-50 hover:bg-purple-100 rounded-2xl border border-slate-200 flex flex-col items-center gap-1 transition-all">
+                    <span class="text-3xl">😌</span>
+                    <span class="text-[11px] font-bold text-slate-700">Tenang</span>
+                </button>
+                <button onclick="confirmMission1Emotion('🤔 Penasaran')" class="p-3 bg-slate-50 hover:bg-purple-100 rounded-2xl border border-slate-200 flex flex-col items-center gap-1 transition-all">
+                    <span class="text-3xl">🤔</span>
+                    <span class="text-[11px] font-bold text-slate-700">Penasaran</span>
+                </button>
+                <button onclick="confirmMission1Emotion('😟 Cemas')" class="p-3 bg-slate-50 hover:bg-purple-100 rounded-2xl border border-slate-200 flex flex-col items-center gap-1 transition-all">
+                    <span class="text-3xl">😟</span>
+                    <span class="text-[11px] font-bold text-slate-700">Cemas</span>
+                </button>
+                <button onclick="confirmMission1Emotion('😐 Biasa')" class="p-3 bg-slate-50 hover:bg-purple-100 rounded-2xl border border-slate-200 flex flex-col items-center gap-1 transition-all">
+                    <span class="text-3xl">😐</span>
+                    <span class="text-[11px] font-bold text-slate-700">Biasa</span>
+                </button>
+            </div>
+
+            <button onclick="closeEmotionModal()" class="w-full py-2.5 bg-slate-200 text-slate-700 font-bold rounded-xl text-xs">Batal</button>
+        </div>
+    </div>
+
+    <!-- MODAL PORTAL GURU / REKAP KELAS -->
+    <div id="guru-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-6">
+        <div class="bg-white rounded-3xl max-w-5xl w-full max-h-[90vh] flex flex-col shadow-2xl border-2 border-indigo-900 overflow-hidden">
+            
+            <!-- Modal Header -->
+            <div class="bg-indigo-950 text-white p-5 flex items-center justify-between border-b border-indigo-800">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-400 text-indigo-950 flex items-center justify-center font-bold text-xl">
+                        <i class="fa-solid fa-chalkboard-user"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-display font-bold text-lg text-canvaYellow leading-none">Portal Rekapitulasi Guru IPA</h3>
+                        <p class="text-xs text-indigo-300 mt-1">Rekapitulasi Hasil Sosial Emosional Siswa Kelas IX</p>
+                    </div>
+                </div>
+                <button onclick="closeGuruModal()" class="w-8 h-8 rounded-full bg-indigo-900 hover:bg-indigo-800 text-indigo-200 flex items-center justify-center text-sm">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- PIN Auth Section (Shown initially) -->
+            <div id="guru-auth-section" class="p-8 text-center max-w-md mx-auto my-auto">
+                <i class="fa-solid fa-lock text-4xl text-indigo-600 mb-3"></i>
+                <h4 class="font-display font-bold text-indigo-950 text-xl mb-2">Masukkan Kode Akses Guru</h4>
+                <p class="text-xs text-slate-500 mb-4">Kode bawaan default untuk guru adalah: <span class="font-mono bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded font-bold">IPA9</span></p>
+                <div class="flex gap-2 mb-4">
+                    <input type="password" id="input-guru-pass" placeholder="Password Guru" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                    <button onclick="verifyGuruPass()" class="px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700">Masuk</button>
+                </div>
+                <p id="guru-pass-error" class="text-xs text-rose-500 font-semibold hidden">Kode akses salah, silakan coba lagi.</p>
+            </div>
+
+            <!-- Dashboard Content (Shown after login) -->
+            <div id="guru-dashboard-content" class="hidden flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+                
+                <!-- Action Bar -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
+                    <div>
+                        <span class="text-xs font-bold uppercase text-indigo-600 tracking-wider">Total Respon Tersimpan</span>
+                        <div class="font-display text-2xl font-bold text-indigo-950" id="total-responses-count">0 Siswa</div>
+                    </div>
+
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <button onclick="refreshGuruData()" class="px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold text-xs hover:bg-slate-50 flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-rotate"></i>
+                            <span>Segarkan Data</span>
+                        </button>
+
+                        <button onclick="downloadTeacherRecapPDF()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-display font-bold text-xs flex items-center gap-2 shadow-sm">
+                            <i class="fa-solid fa-file-pdf"></i>
+                            <span>UNDUH REKAP KELAS (PDF)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Rekap Table -->
+                <div class="overflow-x-auto rounded-2xl border border-slate-200 shadow-sm bg-white">
+                    <table class="w-full text-left text-xs text-slate-700">
+                        <thead class="bg-indigo-900 text-white uppercase text-[10px] font-bold tracking-wider">
+                            <tr>
+                                <th class="p-3 text-center">No</th>
+                                <th class="p-3">Nama Siswa</th>
+                                <th class="p-3">Kelas</th>
+                                <th class="p-3">Kelompok</th>
+                                <th class="p-3">Status Perasaan</th>
+                                <th class="p-3 text-center">Misi Selesai</th>
+                                <th class="p-3 text-center">Bingo</th>
+                                <th class="p-3">Rangkuman Refleksi (Perilaku Positif)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="guru-table-body" class="divide-y divide-slate-100 font-medium">
+                            <!-- Rows populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase Configuration setup
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'sel-bingo-ipa9';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db = null;
+        let auth = null;
+        let currentUser = null;
+
+        if (firebaseConfig) {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // Auth sequence
+                if (initialAuthToken) {
+                    signInWithCustomToken(auth, initialAuthToken)
+                        .then((userCredential) => { currentUser = userCredential.user; })
+                        .catch(() => {
+                            signInAnonymously(auth).then((uc) => currentUser = uc.user);
+                        });
+                } else {
+                    signInAnonymously(auth).then((uc) => currentUser = uc.user);
+                }
+            } catch (e) {
+                console.warn("Firebase initialization skipped or running offline mode:", e);
+            }
+        }
+
+        // Global Firebase save helper
+        window.saveStudentToCloud = async function(data) {
+            if (!db || !currentUser) {
+                console.log("Saving locally (Offline mode active).");
+                return;
+            }
+            try {
+                // Rule 1: /artifacts/{appId}/public/data/reflections
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'reflections', data.id);
+                await setDoc(docRef, data);
+                console.log("Successfully synchronized to Cloud Firestore!");
+            } catch (err) {
+                console.error("Firestore sync error:", err);
+            }
+        };
+
+        window.fetchCloudReflections = async function() {
+            if (!db || !currentUser) return [];
+            try {
+                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'reflections');
+                const snapshot = await getDocs(colRef);
+                const results = [];
+                snapshot.forEach(docSnap => {
+                    results.push(docSnap.data());
+                });
+                return results;
+            } catch (err) {
+                console.error("Error fetching cloud data:", err);
+                return [];
+            }
+        };
+    </script>
+
+    <script>
+        // 25 Missions defined specifically in prompt mapped to SEL competencies
+        const MISSIONS_DATA = [
+            { id: 1, text: "Saya mengenali perasaan saya sebelum belajar.", sel: "Kesadaran Diri", tag: "KD", color: "pink", isEmotionTile: true },
+            { id: 2, text: "Saya berani menyampaikan pendapat.", sel: "Manajemen Diri", tag: "MD", color: "amber" },
+            { id: 3, text: "Saya mendengarkan penjelasan teman.", sel: "Kesadaran Sosial", tag: "KS", color: "blue" },
+            { id: 4, text: "Saya membantu anggota kelompok.", sel: "Keterampilan Berelasi", tag: "KB", color: "emerald" },
+            { id: 5, text: "Saya menyampaikan ide untuk menyelesaikan masalah.", sel: "Pengambilan Keputusan", tag: "PK", color: "purple" },
+            { id: 6, text: "Saya berusaha tetap tenang ketika menemui soal sulit.", sel: "Manajemen Diri", tag: "MD", color: "amber" },
+            { id: 7, text: "Saya bertanya ketika belum memahami materi.", sel: "Kesadaran Diri", tag: "KD", color: "pink" },
+            { id: 8, text: "Saya menggunakan bahasa yang sopan.", sel: "Keterampilan Berelasi", tag: "KB", color: "emerald" },
+            { id: 9, text: "Saya memikirkan solusi bersama kelompok.", sel: "Pengambilan Keputusan", tag: "PK", color: "purple" },
+            { id: 10, text: "Saya mau belajar dari kesalahan.", sel: "Kesadaran Diri", tag: "KD", color: "pink" },
+            { id: 11, text: "Saya fokus menyelesaikan tugas kelompok.", sel: "Manajemen Diri", tag: "MD", color: "amber" },
+            { id: 12, text: "Saya menghargai pendapat yang berbeda.", sel: "Kesadaran Sosial", tag: "KS", color: "blue" },
+            { id: 13, text: "Saya memberi kesempatan kepada teman untuk berbicara.", sel: "Kesadaran Sosial", tag: "KS", color: "blue" },
+            { id: 14, text: "Saya mencoba kembali ketika jawaban saya belum tepat.", sel: "Manajemen Diri", tag: "MD", color: "amber" },
+            { id: 15, text: "Saya mengapresiasi usaha teman.", sel: "Keterampilan Berelasi", tag: "KB", color: "emerald" },
+            { id: 16, text: "Saya berusaha memahami perasaan teman.", sel: "Kesadaran Sosial", tag: "KS", color: "blue" },
+            { id: 17, text: "Saya berbagi pengetahuan tentang materi IPA.", sel: "Pengambilan Keputusan", tag: "PK", color: "purple" },
+            { id: 18, text: "Saya bekerja sama menyelesaikan soal-soal IPA.", sel: "Pengambilan Keputusan", tag: "PK", color: "purple" },
+            { id: 19, text: "Saya mengucapkan terima kasih kepada teman.", sel: "Keterampilan Berelasi", tag: "KB", color: "emerald" },
+            { id: 20, text: "Saya bertanggung jawab atas tugas saya.", sel: "Manajemen Diri", tag: "MD", color: "amber" },
+            { id: 21, text: "Saya menyelesaikan perbedaan pendapat dengan baik.", sel: "Pengambilan Keputusan", tag: "PK", color: "purple" },
+            { id: 22, text: "Saya menghargai usaha diri sendiri.", sel: "Kesadaran Diri", tag: "KD", color: "pink" },
+            { id: 23, text: "Saya memberikan semangat kepada teman.", sel: "Keterampilan Berelasi", tag: "KB", color: "emerald" },
+            { id: 24, text: "Saya menerima masukan dari anggota kelompok.", sel: "Kesadaran Sosial", tag: "KS", color: "blue" },
+            { id: 25, text: "Saya melakukan refleksi terhadap pembelajaran hari ini.", sel: "Kesadaran Diri", tag: "KD", color: "pink" }
+        ];
+
+        // State Application Object
+        let appState = {
+            student: {
+                id: 'std_' + Date.now(),
+                nama: '',
+                kelas: '',
+                kelompok: ''
+            },
+            checkedMissions: new Array(25).fill(false),
+            mission1Emotion: null,
+            reflection: {
+                q1_emotion: '',
+                q2_positif: '',
+                q3_tantangan: '',
+                q4_membantu: '',
+                q5_perbaikan: ''
+            },
+            bingoLinesCount: 0,
+            hasTriggeredBingoCelebration: false
+        };
+
+        // On Page Load: Restore session if existing
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedState = localStorage.getItem('sel_bingo_quest_data');
+            if (savedState) {
+                try {
+                    const parsed = JSON.parse(savedState);
+                    appState = parsed;
+                    if (appState.student.nama) {
+                        updateHeaderBadge();
+                        populateBingoGrid();
+                        restoreReflectionForm();
+                    }
+                } catch(e) {}
+            } else {
+                populateBingoGrid();
+            }
+        });
+
+        function saveStateToLocal() {
+            localStorage.setItem('sel_bingo_quest_data', JSON.stringify(appState));
+        }
+
+        function navigateTo(pageId) {
+            ['page-identitas', 'page-bingo', 'page-refleksi', 'page-penutup'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    if (id === pageId) {
+                        el.classList.remove('hidden');
+                        el.classList.add('block');
+                    } else {
+                        el.classList.add('hidden');
+                        el.classList.remove('block');
+                    }
+                }
+            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function handleStartQuest(event) {
+            event.preventDefault();
+            const nama = document.getElementById('input-nama').value.trim();
+            const kelas = document.getElementById('input-kelas').value;
+            const kelompok = document.getElementById('input-kelompok').value.trim() || '-';
+
+            if (!nama || !kelas) return;
+
+            appState.student.nama = nama;
+            appState.student.kelas = kelas;
+            appState.student.kelompok = kelompok;
+
+            updateHeaderBadge();
+            populateBingoGrid();
+            saveStateToLocal();
+            navigateTo('page-bingo');
+        }
+
+        function updateHeaderBadge() {
+            document.getElementById('student-badge-header').classList.remove('hidden');
+            document.getElementById('header-student-name').textContent = appState.student.nama;
+            document.getElementById('header-student-class').textContent = appState.student.kelas;
+
+            document.getElementById('bingo-student-avatar').textContent = appState.student.nama.charAt(0).toUpperCase();
+            document.getElementById('bingo-student-name').textContent = appState.student.nama;
+            document.getElementById('bingo-student-tag').textContent = 'Kelas ' + appState.student.kelas;
+            document.getElementById('bingo-group-tag').textContent = 'Kelompok: ' + appState.student.kelompok;
+        }
+
+        function populateBingoGrid() {
+            const container = document.getElementById('bingo-grid-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            MISSIONS_DATA.forEach((m, idx) => {
+                const isChecked = appState.checkedMissions[idx];
+                const tile = document.createElement('div');
+
+                // Color mappings for 5 SEL categories (Both checked and unchecked states)
+                let colorBg = 'bg-white';
+                let borderColor = 'border-slate-200';
+                let tagColor = 'bg-slate-100 text-slate-700';
+                let textColor = 'text-slate-800';
+                let categoryTextColor = 'text-slate-500';
+                let checkBadgeBg = 'border-slate-300 text-transparent';
+
+                if (m.sel === 'Kesadaran Diri') {
+                    if (isChecked) {
+                        colorBg = 'bg-gradient-to-br from-pink-500 to-rose-600';
+                        borderColor = 'border-pink-700 shadow-md';
+                        tagColor = 'bg-pink-900/40 text-pink-100';
+                        textColor = 'text-white';
+                        categoryTextColor = 'text-pink-100';
+                        checkBadgeBg = 'bg-white text-pink-600 font-extrabold';
+                    } else {
+                        colorBg = 'bg-pink-50/90 hover:bg-pink-100/90';
+                        borderColor = 'border-pink-200';
+                        tagColor = 'bg-pink-200 text-pink-800';
+                        textColor = 'text-pink-950';
+                        categoryTextColor = 'text-pink-600';
+                        checkBadgeBg = 'border border-pink-300 text-transparent bg-white/60';
+                    }
+                } else if (m.sel === 'Manajemen Diri') {
+                    if (isChecked) {
+                        colorBg = 'bg-gradient-to-br from-amber-400 to-amber-500';
+                        borderColor = 'border-amber-600 shadow-md';
+                        tagColor = 'bg-amber-900/30 text-amber-950 font-bold';
+                        textColor = 'text-slate-950 font-bold';
+                        categoryTextColor = 'text-amber-950 font-semibold';
+                        checkBadgeBg = 'bg-slate-950 text-canvaYellow font-extrabold';
+                    } else {
+                        colorBg = 'bg-amber-50/90 hover:bg-amber-100/90';
+                        borderColor = 'border-amber-200';
+                        tagColor = 'bg-amber-200 text-amber-900';
+                        textColor = 'text-amber-950';
+                        categoryTextColor = 'text-amber-700';
+                        checkBadgeBg = 'border border-amber-300 text-transparent bg-white/60';
+                    }
+                } else if (m.sel === 'Kesadaran Sosial') {
+                    if (isChecked) {
+                        colorBg = 'bg-gradient-to-br from-sky-500 to-blue-600';
+                        borderColor = 'border-blue-700 shadow-md';
+                        tagColor = 'bg-blue-900/40 text-blue-100';
+                        textColor = 'text-white';
+                        categoryTextColor = 'text-blue-100';
+                        checkBadgeBg = 'bg-white text-blue-600 font-extrabold';
+                    } else {
+                        colorBg = 'bg-blue-50/90 hover:bg-blue-100/90';
+                        borderColor = 'border-blue-200';
+                        tagColor = 'bg-blue-200 text-blue-900';
+                        textColor = 'text-blue-950';
+                        categoryTextColor = 'text-blue-600';
+                        checkBadgeBg = 'border border-blue-300 text-transparent bg-white/60';
+                    }
+                } else if (m.sel === 'Keterampilan Berelasi') {
+                    if (isChecked) {
+                        colorBg = 'bg-gradient-to-br from-emerald-500 to-teal-600';
+                        borderColor = 'border-emerald-700 shadow-md';
+                        tagColor = 'bg-emerald-900/40 text-emerald-100';
+                        textColor = 'text-white';
+                        categoryTextColor = 'text-emerald-100';
+                        checkBadgeBg = 'bg-white text-emerald-600 font-extrabold';
+                    } else {
+                        colorBg = 'bg-emerald-50/90 hover:bg-emerald-100/90';
+                        borderColor = 'border-emerald-200';
+                        tagColor = 'bg-emerald-200 text-emerald-900';
+                        textColor = 'text-emerald-950';
+                        categoryTextColor = 'text-emerald-700';
+                        checkBadgeBg = 'border border-emerald-300 text-transparent bg-white/60';
+                    }
+                } else if (m.sel === 'Pengambilan Keputusan') {
+                    if (isChecked) {
+                        colorBg = 'bg-gradient-to-br from-purple-600 to-indigo-700';
+                        borderColor = 'border-purple-800 shadow-md';
+                        tagColor = 'bg-purple-900/40 text-purple-100';
+                        textColor = 'text-white';
+                        categoryTextColor = 'text-purple-100';
+                        checkBadgeBg = 'bg-canvaYellow text-indigo-950 font-extrabold';
+                    } else {
+                        colorBg = 'bg-purple-50/90 hover:bg-purple-100/90';
+                        borderColor = 'border-purple-200';
+                        tagColor = 'bg-purple-200 text-purple-900';
+                        textColor = 'text-purple-950';
+                        categoryTextColor = 'text-purple-700';
+                        checkBadgeBg = 'border border-purple-300 text-transparent bg-white/60';
+                    }
+                }
+
+                tile.className = `${colorBg} ${borderColor} border-2 rounded-2xl p-2.5 sm:p-3 cursor-pointer flex flex-col justify-between transition-all duration-200 pop-on-hover relative overflow-hidden min-h-[110px] sm:min-h-[125px] select-none`;
+                
+                let tileText = m.text;
+                if (m.isEmotionTile && appState.mission1Emotion) {
+                    tileText += ` (${appState.mission1Emotion})`;
+                }
+
+                tile.innerHTML = `
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="font-display text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded-md ${tagColor}">
+                            #${m.id} ${m.tag}
+                        </span>
+                        <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-xs ${checkBadgeBg}">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                    </div>
+                    <p class="text-[11px] sm:text-xs font-semibold leading-snug ${textColor}">
+                        ${tileText}
+                    </p>
+                    <div class="text-[9px] font-bold opacity-80 mt-1 ${categoryTextColor}">
+                        ${m.sel}
+                    </div>
+                `;
+
+                tile.onclick = () => toggleMissionTile(idx);
+                container.appendChild(tile);
+            });
+
+            updateProgressCounters();
+        }
+
+        function toggleMissionTile(index) {
+            // Special rule for Tile 1 (Emotion tile)
+            if (index === 0 && !appState.checkedMissions[0] && !appState.mission1Emotion) {
+                openEmotionModal();
+                return;
+            }
+
+            appState.checkedMissions[index] = !appState.checkedMissions[index];
+            saveStateToLocal();
+            populateBingoGrid();
+            checkBingoStatus();
+        }
+
+        function openEmotionModal() {
+            document.getElementById('emotion-modal').classList.remove('hidden');
+        }
+        function closeEmotionModal() {
+            document.getElementById('emotion-modal').classList.add('hidden');
+        }
+
+        function confirmMission1Emotion(emotion) {
+            appState.mission1Emotion = emotion;
+            appState.checkedMissions[0] = true;
+            closeEmotionModal();
+            saveStateToLocal();
+            populateBingoGrid();
+            checkBingoStatus();
+        }
+
+        function updateProgressCounters() {
+            const count = appState.checkedMissions.filter(Boolean).length;
+            document.getElementById('mission-counter').textContent = `${count} dari 25`;
+        }
+
+        function checkBingoStatus() {
+            const grid = appState.checkedMissions;
+            let lines = 0;
+
+            // 5 Horizontal
+            for (let r = 0; r < 5; r++) {
+                if (grid[r*5] && grid[r*5+1] && grid[r*5+2] && grid[r*5+3] && grid[r*5+4]) lines++;
+            }
+            // 5 Vertical
+            for (let c = 0; c < 5; c++) {
+                if (grid[c] && grid[c+5] && grid[c+10] && grid[c+15] && grid[c+20]) lines++;
+            }
+            // 2 Diagonal
+            if (grid[0] && grid[6] && grid[12] && grid[18] && grid[24]) lines++;
+            if (grid[4] && grid[8] && grid[12] && grid[16] && grid[20]) lines++;
+
+            document.getElementById('bingo-count-text').textContent = `${lines} BINGO!`;
+
+            // Trigger celebration if new bingo line formed
+            if (lines > appState.bingoLinesCount) {
+                triggerBingoCelebration(lines);
+            }
+            appState.bingoLinesCount = lines;
+            saveStateToLocal();
+        }
+
+        function triggerBingoCelebration(linesCount) {
+            // Confetti animation
+            if (window.confetti) {
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            }
+
+            // Custom Notification Toast
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 bg-indigo-900 text-white px-6 py-4 rounded-3xl shadow-2xl border-2 border-canvaYellow z-50 animate-bounce text-center max-w-sm';
+            toast.innerHTML = `
+                <div class="text-canvaYellow text-2xl font-display font-extrabold flex items-center justify-center gap-2 mb-1">
+                    <i class="fa-solid fa-star"></i> BINGO TERCAPAI! (${linesCount}) <i class="fa-solid fa-star"></i>
+                </div>
+                <p class="text-xs font-medium text-indigo-100">Hebat! Kamu telah menunjukkan perkembangan sosial emosional yang luar biasa dalam pembelajaran IPA!</p>
+            `;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 4000);
+        }
+
+        function selectReflectionEmotion(emotion) {
+            appState.reflection.q1_emotion = emotion;
+            document.getElementById('input-refleksi-1').value = emotion;
+
+            document.querySelectorAll('.emotion-btn').forEach(btn => {
+                if (btn.innerText.includes(emotion.split(' ')[1] || emotion)) {
+                    btn.classList.add('border-purple-600', 'bg-purple-100', 'scale-105');
+                    btn.classList.remove('bg-slate-50', 'border-slate-200');
+                } else {
+                    btn.classList.remove('border-purple-600', 'bg-purple-100', 'scale-105');
+                    btn.classList.add('bg-slate-50', 'border-slate-200');
+                }
+            });
+        }
+
+        function restoreReflectionForm() {
+            if (appState.reflection.q1_emotion) {
+                selectReflectionEmotion(appState.reflection.q1_emotion);
+            }
+            document.getElementById('input-refleksi-2').value = appState.reflection.q2_positif || '';
+            document.getElementById('input-refleksi-3').value = appState.reflection.q3_tantangan || '';
+            document.getElementById('input-refleksi-4').value = appState.reflection.q4_membantu || '';
+            document.getElementById('input-refleksi-5').value = appState.reflection.q5_perbaikan || '';
+        }
+
+        async function handleSaveReflection(event) {
+            event.preventDefault();
+
+            appState.reflection.q1_emotion = document.getElementById('input-refleksi-1').value;
+            appState.reflection.q2_positif = document.getElementById('input-refleksi-2').value.trim();
+            appState.reflection.q3_tantangan = document.getElementById('input-refleksi-3').value.trim();
+            appState.reflection.q4_membantu = document.getElementById('input-refleksi-4').value.trim();
+            appState.reflection.q5_perbaikan = document.getElementById('input-refleksi-5').value.trim();
+
+            saveStateToLocal();
+
+            // Prepare record object
+            const completedMissionsCount = appState.checkedMissions.filter(Boolean).length;
+            const payload = {
+                id: appState.student.id,
+                nama: appState.student.nama,
+                kelas: appState.student.kelas,
+                kelompok: appState.student.kelompok,
+                misiSelesai: `${completedMissionsCount}/25`,
+                bingoCount: appState.bingoLinesCount,
+                perasaan: appState.reflection.q1_emotion,
+                perilakuPositif: appState.reflection.q2_positif,
+                tantangan: appState.reflection.q3_tantangan,
+                membantuTeman: appState.reflection.q4_membantu,
+                perbaikan: appState.reflection.q5_perbaikan,
+                timestamp: new Date().toLocaleString('id-ID')
+            };
+
+            // Save to Firestore if available
+            if (window.saveStudentToCloud) {
+                await window.saveStudentToCloud(payload);
+            }
+
+            // Also keep local array for offline Teacher view
+            const localList = JSON.parse(localStorage.getItem('all_students_recap') || '[]');
+            const existingIdx = localList.findIndex(item => item.id === payload.id);
+            if (existingIdx >= 0) {
+                localList[existingIdx] = payload;
+            } else {
+                localList.push(payload);
+            }
+            localStorage.setItem('all_students_recap', JSON.stringify(localList));
+
+            // Populate Page 4 summary
+            const summaryBox = document.getElementById('summary-recap-box');
+            summaryBox.innerHTML = `
+                <p><strong>Nama:</strong> ${payload.nama} (${payload.kelas})</p>
+                <p><strong>Capaian Misi:</strong> ${payload.misiSelesai} (${payload.bingoCount} BINGO)</p>
+                <p><strong>Perasaan Pembelajaran:</strong> ${payload.perasaan}</p>
+                <p><strong>Perilaku Positif:</strong> "${payload.perilakuPositif}"</p>
+            `;
+
+            navigateTo('page-penutup');
+        }
+
+        function downloadIndividualPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            const nama = appState.student.nama || "Siswa";
+            const kelas = appState.student.kelas || "IX";
+            const kelompok = appState.student.kelompok || "-";
+            const count = appState.checkedMissions.filter(Boolean).length;
+
+            // Header Banner
+            doc.setFillColor(30, 27, 75); // Dark Indigo
+            doc.rect(0, 0, 210, 35, 'F');
+
+            doc.setTextColor(255, 209, 102); // Canva Yellow
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(16);
+            doc.text("SEL-BINGO CHALLENGE BOARD: My Social Emotional Quest", 14, 18);
+
+            doc.setFontSize(11);
+            doc.setTextColor(255, 255, 255);
+            doc.text("Laporan Hasil Pembelajaran Sosial Emosional IPA Kelas IX", 14, 26);
+
+            // Student Meta Box
+            doc.setTextColor(30, 41, 59);
+            doc.setFontSize(11);
+            doc.setFont("helvetica", "bold");
+            doc.text(`Nama Siswa : ${nama}`, 14, 45);
+            doc.text(`Kelas      : ${kelas}`, 14, 52);
+            doc.text(`Kelompok   : ${kelompok}`, 14, 59);
+
+            doc.setFillColor(243, 232, 255);
+            doc.roundedRect(120, 40, 75, 22, 3, 3, 'F');
+            doc.setTextColor(107, 33, 168);
+            doc.setFontSize(10);
+            doc.text(`Misi Selesai: ${count} / 25`, 125, 49);
+            doc.text(`Total BINGO : ${appState.bingoLinesCount} Line`, 125, 57);
+
+            // Section 1: Refleksi
+            doc.setTextColor(30, 27, 75);
+            doc.setFontSize(12);
+            doc.setFont("helvetica", "bold");
+            doc.text("A. Hasil Refleksi Diri Siswa", 14, 73);
+
+            const reflectionData = [
+                ["1. Perasaan saat belajar", appState.reflection.q1_emotion || "-"],
+                ["2. Perilaku positif yang ditunjukkan", appState.reflection.q2_positif || "-"],
+                ["3. Tantangan saat kerja kelompok", appState.reflection.q3_tantangan || "-"],
+                ["4. Cara membantu teman", appState.reflection.q4_membantu || "-"],
+                ["5. Rencana perbaikan ke depan", appState.reflection.q5_perbaikan || "-"]
+            ];
+
+            doc.autoTable({
+                startY: 77,
+                head: [["Pertanyaan Refleksi", "Jawaban Siswa"]],
+                body: reflectionData,
+                theme: 'grid',
+                headStyles: { fillStyle: 'F', fillColor: [112, 93, 229], textColor: [255, 255, 255], fontStyle: 'bold' },
+                columnStyles: { 0: { cellWidth: 70, fontStyle: 'bold' }, 1: { cellWidth: 110 } }
+            });
+
+            // Section 2: Daftar Misi Tercentang
+            const finalY = doc.lastAutoTable.finalY + 10;
+            doc.text("B. Daftar Misi Sosial Emosional Terlaksana", 14, finalY);
+
+            const completedMissionsList = [];
+            MISSIONS_DATA.forEach((m, idx) => {
+                if (appState.checkedMissions[idx]) {
+                    completedMissionsList.push([`Misi #${m.id}`, m.sel, m.text]);
+                }
+            });
+
+            if (completedMissionsList.length > 0) {
+                doc.autoTable({
+                    startY: finalY + 4,
+                    head: [["No Misi", "Kompetensi PSE", "Deskripsi Misi"]],
+                    body: completedMissionsList,
+                    theme: 'striped',
+                    headStyles: { fillColor: [6, 214, 160], textColor: [30, 41, 59], fontStyle: 'bold' }
+                });
+            } else {
+                doc.setFontSize(10);
+                doc.setFont("helvetica", "italic");
+                doc.text("Belum ada misi yang ditandai.", 14, finalY + 8);
+            }
+
+            // Footer
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(148, 163, 184);
+            doc.text(`Diunduh pada: ${new Date().toLocaleString('id-ID')}`, 14, 285);
+
+            doc.save(`SEL_Bingo_Refleksi_${nama.replace(/\s+/g, '_')}_${kelas}.pdf`);
+        }
+
+        function openGuruModal() {
+            document.getElementById('guru-modal').classList.remove('hidden');
+        }
+        function closeGuruModal() {
+            document.getElementById('guru-modal').classList.add('hidden');
+        }
+
+        function verifyGuruPass() {
+            const pass = document.getElementById('input-guru-pass').value;
+            if (pass === 'IPA9' || pass === 'admin') {
+                document.getElementById('guru-auth-section').classList.add('hidden');
+                document.getElementById('guru-dashboard-content').classList.remove('hidden');
+                refreshGuruData();
+            } else {
+                document.getElementById('guru-pass-error').classList.remove('hidden');
+            }
+        }
+
+        async function refreshGuruData() {
+            let list = [];
+            // Try fetching from Cloud Firestore
+            if (window.fetchCloudReflections) {
+                list = await window.fetchCloudReflections();
+            }
+            // Fallback to local storage if list is empty
+            if (!list || list.length === 0) {
+                list = JSON.parse(localStorage.getItem('all_students_recap') || '[]');
+            }
+
+            document.getElementById('total-responses-count').textContent = `${list.length} Siswa`;
+            const tbody = document.getElementById('guru-table-body');
+            tbody.innerHTML = '';
+
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-400 italic">Belum ada respon refleksi dari siswa.</td></tr>`;
+                return;
+            }
+
+            list.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = index % 2 === 0 ? 'bg-white' : 'bg-slate-50';
+                tr.innerHTML = `
+                    <td class="p-3 text-center font-bold">${index + 1}</td>
+                    <td class="p-3 font-bold text-indigo-950">${item.nama || '-'}</td>
+                    <td class="p-3"><span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded text-[10px] font-bold">${item.kelas || '-'}</span></td>
+                    <td class="p-3">${item.kelompok || '-'}</td>
+                    <td class="p-3 font-medium">${item.perasaan || '-'}</td>
+                    <td class="p-3 text-center font-bold text-purple-700">${item.misiSelesai || '0/25'}</td>
+                    <td class="p-3 text-center font-bold text-emerald-600">${item.bingoCount || 0}</td>
+                    <td class="p-3 max-w-xs truncate" title="${item.perilakuPositif}">${item.perilakuPositif || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function downloadTeacherRecapPDF() {
+            let list = [];
+            if (window.fetchCloudReflections) {
+                list = await window.fetchCloudReflections();
+            }
+            if (!list || list.length === 0) {
+                list = JSON.parse(localStorage.getItem('all_students_recap') || '[]');
+            }
+
+            if (list.length === 0) {
+                alert("Belum ada data respon siswa untuk diunduh!");
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape');
+
+            // Header Banner
+            doc.setFillColor(30, 27, 75);
+            doc.rect(0, 0, 297, 30, 'F');
+
+            doc.setTextColor(255, 209, 102);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(16);
+            doc.text("REKAPITULASI PEMBELAJARAN SOSIAL EMOSIONAL (SEL-BINGO IPA)", 14, 18);
+
+            doc.setFontSize(10);
+            doc.setTextColor(255, 255, 255);
+            doc.text(`Kelas IX SMP - Total Respon Siswa: ${list.length} | Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')}`, 14, 25);
+
+            // Table Columns & Rows
+            const tableHeaders = [["No", "Nama Siswa", "Kelas", "Kelompok", "Perasaan", "Misi", "Bingo", "Perilaku Positif", "Tantangan Kelompok", "Hal Diperbaiki"]];
+            const tableRows = list.map((s, idx) => [
+                idx + 1,
+                s.nama || "-",
+                s.kelas || "-",
+                s.kelompok || "-",
+                s.perasaan || "-",
+                s.misiSelesai || "0/25",
+                s.bingoCount || "0",
+                s.perilakuPositif || "-",
+                s.tantangan || "-",
+                s.perbaikan || "-"
+            ]);
+
+            doc.autoTable({
+                startY: 35,
+                head: tableHeaders,
+                body: tableRows,
+                theme: 'grid',
+                styles: { fontSize: 8, cellPadding: 2 },
+                headStyles: { fillColor: [112, 93, 229], textColor: [255, 255, 255], fontStyle: 'bold' },
+                columnStyles: {
+                    0: { cellWidth: 10 },
+                    1: { cellWidth: 30, fontStyle: 'bold' },
+                    2: { cellWidth: 15 },
+                    3: { cellWidth: 25 },
+                    4: { cellWidth: 25 },
+                    5: { cellWidth: 15 },
+                    6: { cellWidth: 15 },
+                    7: { cellWidth: 45 },
+                    8: { cellWidth: 45 },
+                    9: { cellWidth: 45 }
+                }
+            });
+
+            doc.save(`REKAP_KELAS_SEL_BINGO_IPA_IX_${new Date().toISOString().slice(0,10)}.pdf`);
+        }
+    </script>
+</body>
+</html>
